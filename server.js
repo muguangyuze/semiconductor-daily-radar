@@ -14,7 +14,10 @@ const STOCKS = [
   { symbol: "NVDA", name: "NVIDIA", region: "美国", sector: "AI 加速器" },
   { symbol: "AMD", name: "AMD", region: "美国", sector: "AI 加速器" },
   { symbol: "AVGO", name: "Broadcom", region: "美国", sector: "AI 网络/ASIC" },
-  { symbol: "MU", name: "Micron", region: "美国", sector: "存储/HBM" },
+  { symbol: "MU", name: "Micron 美光", region: "美国", sector: "存储/HBM" },
+  { symbol: "SNDK", name: "Sandisk 闪迪", region: "美国", sector: "存储/HBM" },
+  { symbol: "MRVL", name: "Marvell 迈威尔", region: "美国", sector: "AI 网络/ASIC" },
+  { symbol: "GLW", name: "Corning 康宁", region: "美国", sector: "硅片/材料" },
   { symbol: "AMAT", name: "Applied Materials", region: "美国", sector: "半导体设备" },
   { symbol: "LRCX", name: "Lam Research", region: "美国", sector: "半导体设备" },
   { symbol: "INTC", name: "Intel", region: "美国", sector: "晶圆制造/CPU" },
@@ -22,6 +25,7 @@ const STOCKS = [
   { symbol: "6857.T", name: "Advantest", region: "日本", sector: "测试设备" },
   { symbol: "6723.T", name: "Renesas", region: "日本", sector: "车用/MCU" },
   { symbol: "4063.T", name: "Shin-Etsu", region: "日本", sector: "硅片/材料" },
+  { symbol: "285A.T", name: "Kioxia 凯侠", region: "日本", sector: "存储/HBM" },
   { symbol: "005930.KS", name: "Samsung Electronics", region: "韩国", sector: "存储/HBM" },
   { symbol: "000660.KS", name: "SK Hynix", region: "韩国", sector: "存储/HBM" },
   {
@@ -283,13 +287,13 @@ const NEWS_FEEDS = [
 ];
 
 const SECTOR_KEYWORDS = [
-  { sector: "存储/HBM", words: ["hbm", "memory", "dram", "nand", "micron", "hynix", "samsung", "存储", "海力士", "三星", "兆易"] },
+  { sector: "存储/HBM", words: ["hbm", "memory", "dram", "nand", "micron", "sandisk", "kioxia", "hynix", "samsung", "存储", "美光", "闪迪", "凯侠", "海力士", "三星", "兆易"] },
   { sector: "AI 加速器", words: ["ai chip", "gpu", "accelerator", "nvidia", "amd", "training", "inference", "ai芯片", "算力", "英伟达"] },
   { sector: "半导体设备", words: ["equipment", "lithography", "deposition", "etch", "tokyo electron", "applied materials", "lam research", "设备", "刻蚀", "薄膜", "清洗", "北方华创", "中微公司", "华海清科"] },
   { sector: "先进封装", words: ["advanced packaging", "cowos", "chiplet", "interposer", "substrate", "先进封装", "封测", "chiplet", "长电科技", "通富微电"] },
-  { sector: "硅片/材料", words: ["wafer", "photoresist", "silicon", "neon", "materials", "chemical", "硅片", "光刻胶", "材料", "特气", "前驱体", "雅克科技"] },
+  { sector: "硅片/材料", words: ["wafer", "photoresist", "silicon", "neon", "materials", "chemical", "corning", "glass", "硅片", "光刻胶", "材料", "特气", "前驱体", "康宁", "雅克科技"] },
   { sector: "车用/MCU", words: ["automotive", "mcu", "renesas", "power semiconductor", "sic", "汽车电子", "功率半导体", "韦尔股份", "mcu"] },
-  { sector: "AI 网络/ASIC", words: ["ethernet", "networking", "asic", "broadcom", "switch", "网络芯片", "交换芯片"] },
+  { sector: "AI 网络/ASIC", words: ["ethernet", "networking", "asic", "broadcom", "marvell", "switch", "网络芯片", "交换芯片", "迈威尔"] },
   { sector: "晶圆制造/CPU", words: ["foundry", "fab", "intel", "smic", "晶圆", "代工", "中芯国际", "制造"] }
 ];
 
