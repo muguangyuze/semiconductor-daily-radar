@@ -192,7 +192,9 @@ function populateSourceFilter() {
 function renderSourceSummary() {
   const sources = state.data.sourceSummary || [];
   els.sourceSummary.innerHTML = sources.map((source) => {
-    const statusClass = source.status === "ok" ? "ok" : "warn";
+    const statusClass = source.status === "ok" || source.status === "external" ? "ok" : "warn";
+    const statusLabel = source.status === "ok" ? "在线" : source.status === "external" ? "监测入口" : "需配置";
+    const statusText = source.status === "ok" ? "已纳入评分模型。" : source.statusText || source.status;
     const monitor = source.monitorUrl
       ? `<a href="${source.monitorUrl}" target="_blank" rel="noreferrer">打开监测</a>`
       : "";
@@ -200,10 +202,10 @@ function renderSourceSummary() {
       <article class="source-card">
         <header>
           <strong>${source.label}</strong>
-          <span class="source-pill ${statusClass}">${source.status === "ok" ? "在线" : "需配置"}</span>
+          <span class="source-pill ${statusClass}">${statusLabel}</span>
         </header>
         <div class="ticker">${source.sourceClass} · 权重 ${Math.round((source.reliability || 0) * 100)} · ${source.count} 条</div>
-        <p>${source.status === "ok" ? "已纳入评分模型。" : source.status}</p>
+        <p>${statusText}</p>
         ${monitor}
       </article>
     `;

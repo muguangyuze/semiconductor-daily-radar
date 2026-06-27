@@ -387,31 +387,14 @@ function withFeedMeta(feed, items) {
 }
 
 async function fetchXFeed(feed) {
-  const token = process.env.X_BEARER_TOKEN;
   const monitorUrl = `https://x.com/search?q=${encodeURIComponent(feed.query)}&src=typed_query&f=live`;
-  if (!token) {
-    return {
-      ...feed,
-      items: [],
-      monitorUrl,
-      status: "需要配置 X_BEARER_TOKEN 后接入真实 X 实时搜索。"
-    };
-  }
-
-  const url = `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(feed.query)}&max_results=10&tweet.fields=created_at,public_metrics`;
-  const json = JSON.parse(await fetchTextWithHeaders(url, {
-    authorization: `Bearer ${token}`,
-    "user-agent": "Mozilla/5.0 semiconductor-daily-radar/1.0"
-  }));
-  const items = (json.data || []).map((tweet) => ({
-    group: feed.key,
-    title: tweet.text.replace(/\s+/g, " ").slice(0, 220),
-    source: "X",
-    link: `https://x.com/i/web/status/${tweet.id}`,
-    publishedAt: tweet.created_at,
-    engagement: tweet.public_metrics || {}
-  }));
-  return { ...feed, monitorUrl, items: withFeedMeta(feed, items) };
+  return {
+    ...feed,
+    items: [],
+    monitorUrl,
+    status: "external",
+    statusText: "当前采用免费外部监测模式：点击打开 X 实时搜索，不调用付费 X API。"
+  };
 }
 
 function fetchTextWithHeaders(url, headers, timeoutMs = 9000) {
@@ -679,6 +662,7 @@ function buildSourceSummary(feeds) {
     reliability: feed.reliability,
     count: feed.items.length,
     status: feed.status || feed.error || "ok",
+    statusText: feed.statusText || feed.error || "",
     monitorUrl: feed.monitorUrl || null
   }));
 }
@@ -726,7 +710,12 @@ function serveStatic(res, pathname) {
       ".js": "text/javascript; charset=utf-8",
       ".json": "application/json; charset=utf-8"
     }[ext] || "application/octet-stream";
-    res.writeHead(200, { "content-type": type });
+    res.writeHead(200, {
+      "content-type": type,
+      "cache-control": "no-cache, no-store, must-revalidate",
+      pragma: "no-cache",
+      expires: "0"
+    });
     res.end(content);
   });
 }
