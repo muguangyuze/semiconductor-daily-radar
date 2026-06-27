@@ -6,7 +6,9 @@ const { URL } = require("url");
 
 const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
-const PUBLIC_DIR = path.join(__dirname, "public");
+const PUBLIC_DIR = fs.existsSync(path.join(__dirname, "public", "index.html"))
+  ? path.join(__dirname, "public")
+  : __dirname;
 
 const STOCKS = [
   { symbol: "NVDA", name: "NVIDIA", region: "美国", sector: "AI 加速器" },
