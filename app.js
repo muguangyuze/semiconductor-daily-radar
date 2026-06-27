@@ -3,7 +3,8 @@ const state = {
   region: "全部",
   sector: "全部",
   feed: "all",
-  sourceClass: "all"
+  sourceClass: "all",
+  detailLoading: false
 };
 
 const els = {
@@ -75,7 +76,10 @@ function scoreWidth(score, maxScore) {
 
 function renderCandles(candles = []) {
   const data = candles.slice(-32);
-  if (data.length < 3) return `<div class="mini-kline empty-kline">K线暂无</div>`;
+  if (data.length < 3) {
+    const text = state.data && !state.data.detail ? "K线同步中" : "K线暂无";
+    return `<div class="mini-kline empty-kline">${text}</div>`;
+  }
   const width = 260;
   const height = 94;
   const pad = 8;
@@ -116,6 +120,7 @@ function renderCandles(candles = []) {
 function renderFinancials(stock) {
   const data = stock.fundamentals || {};
   const statusOk = data.status === "ok";
+  const fallback = state.data && !state.data.detail ? "详细财务后台同步中" : "财务数据暂不可用";
   return `
     <div class="financial-strip">
       <div>
@@ -135,7 +140,7 @@ function renderFinancials(stock) {
         <strong>${data.period || "暂无"}</strong>
       </div>
     </div>
-    <div class="financial-source">${statusOk ? `${data.source} · ${data.noticeDate ? formatTime(data.noticeDate) : "已同步"}` : data.status || "财务数据暂不可用"}</div>
+    <div class="financial-source">${statusOk ? `${data.source} · ${data.noticeDate ? formatTime(data.noticeDate) : "已同步"}` : data.status || fallback}</div>
   `;
 }
 
@@ -207,7 +212,8 @@ function renderSourceSummary() {
 
 function renderHardPicks() {
   const picks = state.data.stockRecommendations || [];
-  els.hardPicks.innerHTML = picks.map((stock, index) => `
+  const detailNote = state.data.detail ? "" : `<div class="empty detail-note">核心推荐已显示，K线、净利润和毛利率正在后台补全。</div>`;
+  els.hardPicks.innerHTML = detailNote + (picks.map((stock, index) => `
     <article class="hard-pick-card">
       <div class="pick-rank">${index + 1}</div>
       <div class="pick-main">
@@ -232,7 +238,7 @@ function renderHardPicks() {
         </div>
       </div>
     </article>
-  `).join("") || `<div class="empty">暂无 A股推荐结果。</div>`;
+  `).join("") || `<div class="empty">暂无 A股推荐结果。</div>`);
 }
 
 function renderStocks() {
@@ -308,14 +314,15 @@ function render() {
 
 async function loadDashboard(force = false) {
   els.refresh.disabled = true;
-  els.status.textContent = "同步中";
+  els.status.textContent = "核心同步中";
   try {
     const response = await fetch(`/api/dashboard${force ? "?refresh=1" : ""}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || data.error || "数据同步失败");
     state.data = data;
-    els.status.textContent = data.cached ? "缓存数据" : "已同步";
+    els.status.textContent = data.cached ? "核心缓存" : "核心已同步";
     render();
+    loadDashboardDetail(force);
   } catch (error) {
     els.status.textContent = "同步失败";
     els.topSector.textContent = "实时数据暂时不可用";
@@ -323,6 +330,29 @@ async function loadDashboard(force = false) {
     els.news.innerHTML = `<div class="empty">${error.message}</div>`;
   } finally {
     els.refresh.disabled = false;
+  }
+}
+
+async function loadDashboardDetail(force = false) {
+  state.detailLoading = true;
+  els.status.textContent = "补全详细中";
+  try {
+    const params = new URLSearchParams({ detail: "1" });
+    if (force) params.set("refresh", "1");
+    const response = await fetch(`/api/dashboard?${params.toString()}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || data.error || "详细数据同步失败");
+    state.data = data;
+    els.status.textContent = data.cached ? "详细缓存" : "详细已同步";
+    render();
+  } catch (error) {
+    els.status.textContent = "核心已显示";
+    if (state.data) {
+      state.data.caveat = `${state.data.caveat || "公开数据聚合，仅供研究参考。"} 详细数据稍后可刷新重试：${error.message}`;
+      renderSummary();
+    }
+  } finally {
+    state.detailLoading = false;
   }
 }
 
