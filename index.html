@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>全球半导体每日雷达</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">A Shares · Japan · Korea · United States</p>
+        <h1>全球半导体每日雷达</h1>
+      </div>
+      <div class="actions">
+        <button id="refreshButton" class="icon-button" title="刷新实时数据" aria-label="刷新实时数据">↻</button>
+        <span id="status" class="status">准备同步</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker">Daily Semiconductor Intelligence</p>
+          <h2 id="topSector">正在计算今日最热细分板块</h2>
+          <p id="topRationale">聚合股价、供应紧缺、财报分析、重要人物预测和 A股产业链信号后生成推荐。</p>
+        </div>
+        <div class="signal-board" aria-label="市场信号摘要">
+          <div>
+            <span id="newsCount">0</span>
+            <small>新闻信号</small>
+          </div>
+          <div>
+            <span id="stockCount">0</span>
+            <small>追踪股票</small>
+          </div>
+          <div>
+            <span id="updatedAt">--:--</span>
+            <small>最近同步</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="layout">
+        <aside class="panel controls">
+          <h3>追踪范围</h3>
+          <label>
+            <span>地区</span>
+            <select id="regionFilter">
+              <option value="全部">全部</option>
+              <option value="A股">A股</option>
+              <option value="美国">美国</option>
+              <option value="日本">日本</option>
+              <option value="韩国">韩国</option>
+            </select>
+          </label>
+          <label>
+            <span>细分板块</span>
+            <select id="sectorFilter">
+              <option value="全部">全部</option>
+            </select>
+          </label>
+          <label>
+            <span>信息类别</span>
+            <select id="feedFilter">
+              <option value="all">全部消息</option>
+              <option value="headline">半导体要闻</option>
+              <option value="materials">原材料/供应紧缺</option>
+              <option value="earnings">财报分析</option>
+              <option value="people">重要人物预测</option>
+              <option value="a_shares">A股半导体</option>
+              <option value="korea_local">韩国本土专业源</option>
+              <option value="japan_local">日本本土专业源</option>
+              <option value="x_signals">X舆情信号</option>
+            </select>
+          </label>
+          <label>
+            <span>来源类别</span>
+            <select id="sourceFilter">
+              <option value="all">全部来源</option>
+            </select>
+          </label>
+          <div class="legend">
+            <span><i class="dot up"></i>上涨</span>
+            <span><i class="dot down"></i>下跌</span>
+            <span><i class="dot flat"></i>无数据</span>
+          </div>
+        </aside>
+
+        <section class="panel recommendations">
+          <div class="section-head">
+            <h3>今日细分板块热度</h3>
+            <span>综合新闻量 + 行情动量 + 紧缺信号</span>
+          </div>
+          <div id="recommendations" class="sector-list"></div>
+        </section>
+      </section>
+
+      <section class="panel hard-picks-panel">
+        <div class="section-head">
+          <h3>A股硬逻辑股票推荐</h3>
+          <span>从今日最热板块中筛选：产业逻辑 + 业绩信号 + 行情动量 + 风险词</span>
+        </div>
+        <div id="hardPicks" class="hard-pick-list"></div>
+      </section>
+
+      <section class="panel source-panel">
+        <div class="section-head">
+          <h3>信息源健康度</h3>
+          <span>本土专业源、聚合源与 X 舆情分层加权</span>
+        </div>
+        <div id="sourceSummary" class="source-summary"></div>
+      </section>
+
+      <section class="grid-two">
+        <section class="panel">
+          <div class="section-head">
+            <h3>核心股票行情</h3>
+            <span>Yahoo Finance 延迟行情</span>
+          </div>
+          <div id="stocks" class="stock-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h3>实时消息流</h3>
+            <span>Google News RSS</span>
+          </div>
+          <div id="news" class="news-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <span id="caveat">公开数据聚合，仅供研究参考。</span>
+    </footer>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
