@@ -113,6 +113,96 @@ const STOCKS = [
     thesis: "半导体硅片国产化方向，和晶圆厂扩产相关度高",
     hardTags: ["硅片", "材料国产化", "晶圆扩产"],
     quality: 6
+  },
+  {
+    symbol: "688256.SS",
+    name: "寒武纪",
+    region: "A股",
+    sector: "AI 加速器",
+    thesis: "国产 AI 芯片代表，受益算力国产化和智能计算中心需求",
+    hardTags: ["AI芯片", "算力国产化", "训练推理"],
+    quality: 8
+  },
+  {
+    symbol: "688041.SS",
+    name: "海光信息",
+    region: "A股",
+    sector: "AI 加速器",
+    thesis: "国产高端处理器与加速器平台，服务器和信创算力具备持续跟踪价值",
+    hardTags: ["国产CPU", "AI算力", "信创"],
+    quality: 8
+  },
+  {
+    symbol: "688008.SS",
+    name: "澜起科技",
+    region: "A股",
+    sector: "AI 网络/ASIC",
+    thesis: "内存接口芯片和服务器平台芯片受益于 AI 服务器与高带宽内存链条",
+    hardTags: ["内存接口", "AI服务器", "高带宽内存"],
+    quality: 8
+  },
+  {
+    symbol: "688525.SS",
+    name: "佰维存储",
+    region: "A股",
+    sector: "存储/HBM",
+    thesis: "存储模组和企业级存储受益于存储周期复苏与国产替代",
+    hardTags: ["存储周期", "企业级存储", "国产替代"],
+    quality: 6
+  },
+  {
+    symbol: "688072.SS",
+    name: "拓荆科技",
+    region: "A股",
+    sector: "半导体设备",
+    thesis: "薄膜沉积设备处于晶圆制造关键工艺环节，国产替代空间明确",
+    hardTags: ["薄膜沉积", "关键设备", "国产替代"],
+    quality: 8
+  },
+  {
+    symbol: "688082.SS",
+    name: "盛美上海",
+    region: "A股",
+    sector: "半导体设备",
+    thesis: "清洗、电镀等设备覆盖先进封装与晶圆制造关键步骤",
+    hardTags: ["清洗设备", "电镀设备", "先进封装"],
+    quality: 8
+  },
+  {
+    symbol: "688037.SS",
+    name: "芯源微",
+    region: "A股",
+    sector: "半导体设备",
+    thesis: "涂胶显影和清洗设备具备光刻前后道配套价值",
+    hardTags: ["涂胶显影", "清洗设备", "国产替代"],
+    quality: 7
+  },
+  {
+    symbol: "300666.SZ",
+    name: "江丰电子",
+    region: "A股",
+    sector: "硅片/材料",
+    thesis: "高纯溅射靶材处于晶圆制造材料核心环节",
+    hardTags: ["靶材", "高纯材料", "国产替代"],
+    quality: 7
+  },
+  {
+    symbol: "300054.SZ",
+    name: "鼎龙股份",
+    region: "A股",
+    sector: "硅片/材料",
+    thesis: "CMP 抛光垫、抛光液等材料进入晶圆制造关键耗材链条",
+    hardTags: ["CMP材料", "抛光垫", "国产替代"],
+    quality: 7
+  },
+  {
+    symbol: "002185.SZ",
+    name: "华天科技",
+    region: "A股",
+    sector: "先进封装",
+    thesis: "封测平台型公司，受益国产封测需求和先进封装景气度",
+    hardTags: ["封测平台", "先进封装", "国产替代"],
+    quality: 6
   }
 ];
 
@@ -207,7 +297,10 @@ const HARD_LOGIC_WORDS = ["国产替代", "先进制程", "先进封装", "hbm",
 const EARNINGS_WORDS = ["财报", "业绩", "利润", "营收", "毛利率", "订单", "指引", "增长", "earnings", "revenue", "margin", "guidance", "profit"];
 const RISK_WORDS = ["下调", "亏损", "减持", "制裁", "调查", "跌", "plunge", "loss", "cut", "weak", "sanction"];
 
-let cache = { at: 0, data: null };
+let cache = {
+  fast: { at: 0, data: null },
+  detail: { at: 0, data: null }
+};
 
 function sendJson(res, status, data) {
   const body = JSON.stringify(data);
@@ -265,7 +358,7 @@ function tag(block, name) {
   return match ? decodeXml(match[1]) : "";
 }
 
-function parseRss(xml, group, maxAgeDays) {
+function parseRss(xml, group, maxAgeDays, limit = 10) {
   const minTime = maxAgeDays ? Date.now() - maxAgeDays * 24 * 60 * 60 * 1000 : 0;
   return Array.from(xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)).map((match) => {
     const block = match[0];
@@ -281,7 +374,7 @@ function parseRss(xml, group, maxAgeDays) {
     if (!minTime || !item.publishedAt) return true;
     const publishedTime = Date.parse(item.publishedAt);
     return Number.isFinite(publishedTime) && publishedTime >= minTime;
-  }).slice(0, 10);
+  }).slice(0, limit);
 }
 
 function withFeedMeta(feed, items) {
@@ -344,7 +437,8 @@ function fetchTextWithHeaders(url, headers, timeoutMs = 9000) {
   });
 }
 
-async function fetchNews() {
+async function fetchNews(options = {}) {
+  const itemLimit = options.itemLimit || 10;
   const settled = await Promise.allSettled(NEWS_FEEDS.map(async (feed) => {
     if (feed.provider === "x") return fetchXFeed(feed);
     const hl = feed.hl || "en-US";
@@ -352,7 +446,7 @@ async function fetchNews() {
     const ceid = feed.ceid || "US:en";
     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(feed.query)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
     const xml = await fetchText(url);
-    return { ...feed, items: withFeedMeta(feed, parseRss(xml, feed.key, feed.maxAgeDays)) };
+    return { ...feed, items: withFeedMeta(feed, parseRss(xml, feed.key, feed.maxAgeDays, itemLimit)) };
   }));
 
   return settled.map((result, index) => {
@@ -361,8 +455,10 @@ async function fetchNews() {
   });
 }
 
-async function fetchStock(stock) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(stock.symbol)}?range=3mo&interval=1d`;
+async function fetchStock(stock, options = {}) {
+  const includeCandles = options.includeCandles !== false;
+  const range = includeCandles ? "3mo" : "5d";
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(stock.symbol)}?range=${range}&interval=1d`;
   const json = JSON.parse(await fetchText(url));
   const result = json.chart && json.chart.result && json.chart.result[0];
   if (!result) throw new Error(`No chart result for ${stock.symbol}`);
@@ -373,19 +469,20 @@ async function fetchStock(stock) {
   const previous = Number(closes[closes.length - 2] || meta.chartPreviousClose || last);
   const changePct = previous ? ((last - previous) / previous) * 100 : 0;
 
-  return {
+  const payload = {
     ...stock,
     price: last,
     currency: meta.currency || "",
     exchange: meta.exchangeName || "",
     changePct,
-    marketTime: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null,
-    candles: buildCandles(result).slice(-42)
+    marketTime: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null
   };
+  if (includeCandles) payload.candles = buildCandles(result).slice(-42);
+  return payload;
 }
 
-async function fetchStocks() {
-  const settled = await Promise.allSettled(STOCKS.map(fetchStock));
+async function fetchStocks(options = {}) {
+  const settled = await Promise.allSettled(STOCKS.map((stock) => fetchStock(stock, options)));
   return settled.map((result, index) => {
     if (result.status === "fulfilled") return result.value;
     return { ...STOCKS[index], price: null, currency: "", exchange: "", changePct: null, error: result.reason.message };
@@ -561,7 +658,7 @@ function scoreStockRecommendations(stocks, feeds, sectors) {
       };
     })
     .sort((a, b) => b.score - a.score)
-    .slice(0, 8);
+    .slice(0, 18);
 }
 
 function buildStockRationale(stock, sectorBonus, logicHits, earningsHits, momentum, riskHits) {
@@ -586,14 +683,19 @@ function buildSourceSummary(feeds) {
   }));
 }
 
-async function buildDashboard() {
-  const [rawStocks, feeds] = await Promise.all([fetchStocks(), fetchNews()]);
-  const stocks = await enrichAshareFundamentals(rawStocks);
+async function buildDashboard(options = {}) {
+  const detail = options.detail === true;
+  const [rawStocks, feeds] = await Promise.all([
+    fetchStocks({ includeCandles: detail }),
+    fetchNews({ itemLimit: detail ? 10 : 6 })
+  ]);
+  const stocks = detail ? await enrichAshareFundamentals(rawStocks) : rawStocks;
   const recommendations = scoreSectors(stocks, feeds);
   const stockRecommendations = scoreStockRecommendations(stocks, feeds, recommendations);
   const sourceSummary = buildSourceSummary(feeds);
   return {
     generatedAt: new Date().toISOString(),
+    detail,
     stocks,
     feeds,
     sourceSummary,
@@ -633,13 +735,16 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   if (url.pathname === "/api/dashboard") {
     const force = url.searchParams.get("refresh") === "1";
-    if (!force && cache.data && Date.now() - cache.at < 1000 * 60 * 10) {
-      sendJson(res, 200, { ...cache.data, cached: true });
+    const wantsDetail = url.searchParams.get("detail") === "1";
+    const cacheKey = wantsDetail ? "detail" : "fast";
+    const activeCache = cache[cacheKey];
+    if (!force && activeCache.data && Date.now() - activeCache.at < 1000 * 60 * 10) {
+      sendJson(res, 200, { ...activeCache.data, cached: true });
       return;
     }
     try {
-      const data = await buildDashboard();
-      cache = { at: Date.now(), data };
+      const data = await buildDashboard({ detail: wantsDetail });
+      cache[cacheKey] = { at: Date.now(), data };
       sendJson(res, 200, data);
     } catch (error) {
       sendJson(res, 502, {
